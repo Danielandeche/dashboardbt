@@ -56,11 +56,6 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
     const [is_file_supported, setIsFileSupported] = React.useState<boolean>(true);
     const file_input_ref = React.useRef<HTMLInputElement | null>(null);
 
-    const openGoogleDriveDialog = () => {
-        showVideoDialog({
-            type: 'google',
-        });
-    };
 
     const openFileLoader = () => {
         file_input_ref?.current?.click();
@@ -70,19 +65,13 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
         {
             type: 'my-computer',
             icon: is_mobile ? 'IcLocal' : 'IcMyComputer',
-            content: is_mobile ? localize('Local') : localize('My computer'),
+            content: is_mobile ? localize('Upload Bot') : localize('Upload Bot'),
             method: openFileLoader,
-        },
-        {
-            type: 'google-drive',
-            icon: 'IcGoogleDriveDbot',
-            content: localize('Google Drive'),
-            method: openGoogleDriveDialog,
         },
         {
             type: 'bot-builder',
             icon: 'IcBotBuilder',
-            content: localize('Bot Builder'),
+            content: localize('Bot Editor'),
             method: () => {
                 setActiveTab(DBOT_TABS.BOT_BUILDER);
                 sentToRudderStackTabChange('bot-builder');
@@ -91,7 +80,7 @@ const Cards = observer(({ is_mobile, has_dashboard_strategies }: TCardProps) => 
         {
             type: 'quick-strategy',
             icon: 'IcQuickStrategy',
-            content: localize('Quick strategy'),
+            content: localize('Pre strategy'),
             method: () => {
                 setActiveTab(DBOT_TABS.BOT_BUILDER);
                 setFormVisibility(true);

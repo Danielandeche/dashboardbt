@@ -3,7 +3,7 @@
 .bot-dashboard {
     position: relative;
     height: calc(100vh - 8.4rem);
-    overflow: hidden;
+    overflow: auto;
 
     @include mobile {
         height: calc(100vh - 3.4rem);
@@ -203,6 +203,7 @@
                 justify-content: flex-start;
                 padding: 0.4rem 2.4rem;
                 height: 100%;
+                overflow: auto;
             }
         }
 
@@ -301,7 +302,7 @@
 
         &__table {
             @include mobile-tablet-mix {
-                width: calc(100% - 9.3rem);
+                width: calc(100%);
             }
 
             &--minimized {

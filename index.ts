@@ -1,4 +1,4 @@
-import Dashboard from './dashboard';
+import BinaryToolsBots from './dashboard';
 import './dashboard.scss';
 
-export default Dashboard;
+export default BinaryToolsBots;

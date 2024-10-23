@@ -1,15 +1,13 @@
 import React from 'react';
 import classnames from 'classnames';
-import { timeSince } from '@deriv/bot-skeleton';
-import { save_types } from '@deriv/bot-skeleton/src/constants/save-type';
-import { DesktopWrapper, Icon, MobileWrapper, Text } from '@deriv/components';
+
 import { isDesktop } from '@deriv/shared';
 import { observer, useStore } from '@deriv/stores';
 import { Analytics } from '@deriv-com/analytics';
 import { DBOT_TABS } from 'Constants/bot-contents';
 import { waitForDomElement } from 'Utils/dom-observer';
 import { useDBotStore } from 'Stores/useDBotStore';
-import { CONTEXT_MENU_MOBILE, MENU_DESKTOP, STRATEGY } from '../../../constants/dashboard';
+import { STRATEGY } from '../../../constants/dashboard';
 import { useComponentVisibility } from '../../../hooks';
 import {
     rudderstackDashboardChooseYourBot,
@@ -18,6 +16,7 @@ import {
     rudderstackDashboardSaveYourBot,
 } from '../analytics/rudderstack-dashboard';
 import './index.scss';
+import './style.css';
 
 type TRecentWorkspace = {
     index: number;
@@ -28,7 +27,7 @@ type TRecentWorkspace = {
 const RecentWorkspace = observer(({ workspace, index }: TRecentWorkspace) => {
     const { ui } = useStore();
     const { is_mobile } = ui;
-    const { dashboard, load_modal, save_modal } = useDBotStore();
+    const { dashboard, load_modal, save_modal, toolbar } = useDBotStore();
     const { active_tab, setActiveTab, setPreviewOnDialog } = dashboard;
     const { toggleSaveModal, updateBotName } = save_modal;
     const {
@@ -44,7 +43,7 @@ const RecentWorkspace = observer(({ workspace, index }: TRecentWorkspace) => {
         setSelectedStrategyId,
         setPreviewedStrategyId,
     } = load_modal;
-
+    const { loadCustomStrategy } = toolbar;
     const trigger_div_ref = React.useRef<HTMLInputElement | null>(null);
     const toggle_ref = React.useRef<HTMLButtonElement>(null);
     const is_div_triggered_once = React.useRef<boolean>(false);
@@ -77,7 +76,7 @@ const RecentWorkspace = observer(({ workspace, index }: TRecentWorkspace) => {
     const handleInit = () => {
         setPreviewedStrategyId(workspace?.id);
         // Fires for desktop
-        if (active_tab === 0) {
+        if (active_tab === 0 || active_tab === 2) {
             previewRecentStrategy(workspace.id);
         }
     };
@@ -96,6 +95,11 @@ const RecentWorkspace = observer(({ workspace, index }: TRecentWorkspace) => {
             action: 'open',
             form_source: 'bot_dashboard_form-open',
         });
+    };
+
+    const handleOpenBot = async () => {
+        await loadCustomStrategy(index);
+        setActiveTab(DBOT_TABS.BOT_BUILDER);
     };
 
     const handleEdit = async () => {
@@ -168,97 +172,23 @@ const RecentWorkspace = observer(({ workspace, index }: TRecentWorkspace) => {
 
     return (
         <div
-            className={classnames('bot-list__item', {
-                'bot-list__item--selected': previewed_strategy_id === workspace.id,
-                'bot-list__item--loaded': dashboard_strategies,
-                'bot-list__item--min': !!dashboard_strategies?.length && !is_desktop,
+            className={classnames('binarytools-list__item ', {
+                'binarytools-list__item --selected': previewed_strategy_id === workspace.id,
+                'binarytools-list__item --loaded': dashboard_strategies,
+                'binarytools-list__item --min': !!dashboard_strategies?.length && !is_desktop,
             })}
             key={workspace.id}
-            ref={trigger_div_ref}
             onClick={e => {
-                e.stopPropagation(); //stop event bubbling for child element
-                if (is_dropdown_visible) setDropdownVisibility(false);
-                getSelectedStrategyID(workspace.id);
-                viewRecentStrategy(STRATEGY.INIT);
+                // // getSelectedStrategyID(workspace.id);
+                e.stopPropagation();
+                handleOpenBot();
             }}
         >
-            <div className='bot-list__item__label'>
+            <div className='binarytools-list__item__label'>
                 <div className='text-wrapper' title={workspace.name}>
-                    <Text align='left' as='p' size={text_size} line_height='l'>
-                        {workspace.name}
-                    </Text>
+                    <div className='name_text'>{workspace.name}</div>
                 </div>
             </div>
-            <div className='bot-list__item__time-stamp'>
-                <Text align='left' as='p' size={text_size} line_height='l'>
-                    {timeSince(workspace.timestamp)}
-                </Text>
-            </div>
-            <div className='bot-list__item__load-type'>
-                <Icon
-                    icon={getRecentFileIcon(workspace.save_type)}
-                    className={classnames({
-                        'bot-list__item__load-type__icon--active': workspace.save_type === save_types.GOOGLE_DRIVE,
-                    })}
-                />
-                <div className='bot-list__item__load-type__icon--saved'>
-                    <Text align='left' as='p' size={text_size} line_height='l'>
-                        {getSaveType(workspace.save_type)}
-                    </Text>
-                </div>
-            </div>
-            <DesktopWrapper>
-                <div className='bot-list__item__actions'>
-                    {MENU_DESKTOP.map(item => (
-                        <div
-                            key={item.type}
-                            className='bot-list__item__actions__action-item'
-                            onClick={e => {
-                                e.stopPropagation();
-                                viewRecentStrategy(item.type);
-                            }}
-                        >
-                            <Icon icon={item.icon} />
-                        </div>
-                    ))}
-                </div>
-            </DesktopWrapper>
-            <MobileWrapper>
-                <div className='bot-list__item__actions'>
-                    <button ref={toggle_ref} onClick={onToggleDropdown} tabIndex={0}>
-                        <Icon icon='IcMenuDots' />
-                    </button>
-                </div>
-                <div
-                    className={classnames('bot-list__item__responsive', {
-                        'bot-list__item__responsive--active': is_active_mobile,
-                        'bot-list__item__responsive--min': dashboard_strategies.length <= 5,
-                    })}
-                >
-                    {CONTEXT_MENU_MOBILE.map(item => (
-                        <div
-                            key={item.type}
-                            className='bot-list__item__responsive__menu'
-                            onClick={e => {
-                                e.stopPropagation();
-                                viewRecentStrategy(item.type);
-                            }}
-                        >
-                            <div>
-                                <Icon icon={item.icon} />
-                            </div>
-                            <Text
-                                color='prominent'
-                                className='bot-list__item__responsive__menu__item'
-                                as='p'
-                                size='xxs'
-                            >
-                                {item.label}
-                            </Text>
-                        </div>
-                    ))}
-                </div>
-            </MobileWrapper>
         </div>
     );
 });
